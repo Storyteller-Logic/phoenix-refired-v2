@@ -1,0 +1,436 @@
+{
+  "project": "Phoenix Brain Harness Rebuild - CORRECTED",
+  "location": "/mnt/hdd/phoenix-refire/harness",
+  "live_brain": "/mnt/hdd/phoenix-refire/brain",
+  "primary_model": "Gemma Heretic at 127.0.0.1:5810 (ALL LIVE TESTS)",
+  "swap_model_1": "Gemma Heretic at 127.0.0.1:5810",
+  "swap_model_2": "Agents-a1 at http://127.0.0.1:8000/v1",
+  "adversarial_models": [
+    "Gemma Heretic at 127.0.0.1:5810",
+    "Agents-a1 at http://127.0.0.1:8000/v1"
+  ],
+  "testing_framework": {
+    "live_brain": "/mnt/hdd/phoenix-refire/brain",
+    "all_live_tests": "Gemma Heretic at 127.0.0.1:5810",
+    "model_swap": "Between Gemma Heretic and Agents-a1",
+    "adversarial_passes": "Gemma Heretic AND Agents-a1",
+    "acceptance_thresholds": {
+      "minimum": 0.9,
+      "target": 0.97,
+      "ideal": 1.0
+    },
+    "principle": "Correct > Complete - If it isn't correct, it isn't complete"
+  },
+  "phase_0_setup": {
+    "name": "Environment Setup & Baseline",
+    "duration": "Day 1-2",
+    "chunks": [
+      {
+        "id": "0.1",
+        "name": "Repository preparation",
+        "tasks": [
+          "Initialize empty harness directory with .python-version and pyproject.toml",
+          "Configure uv and install dependencies",
+          "Create initial directory structure",
+          "Validate Python 3.12+ environment"
+        ]
+      },
+      {
+        "id": "0.2",
+        "name": "Live brain and Gemma Heretic connectivity",
+        "tasks": [
+          "Test connection to /mnt/hdd/phoenix-refire/brain",
+          "Verify Gemma Heretic endpoint at 127.0.0.1:5810",
+          "Verify Agents-a1 endpoint at http://127.0.0.1:8000/v1",
+          "Create baseline turn test with Gemma Heretic",
+          "Record baseline performance metrics"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Can complete a turn with live brain using Gemma Heretic",
+      "test": "Run minimal turn with Gemma Heretic, verify WAL append and reply",
+      "minimum_threshold": 0.95
+    }
+  },
+  "phase_1_turn_loop_core": {
+    "name": "Turn Loop Integration & Verification",
+    "duration": "Day 3-7",
+    "chunks": [
+      {
+        "id": "1.1",
+        "name": "WAL append and context assembly",
+        "tasks": [
+          "Implement durable-first WAL append",
+          "Assemble bounded context (last 5-10 messages, recall, identity)",
+          "Implement recall with worth-sorted memories",
+          "Inject agent identity"
+        ]
+      },
+      {
+        "id": "1.2",
+        "name": "Inference and tool loop integration",
+        "tasks": [
+          "Integrate Gemma Heretic inference at 127.0.0.1:5810",
+          "Parse response for tools",
+          "Implement bounded tool dispatch (max 8)",
+          "Record tool calls, feed back results"
+        ]
+      },
+      {
+        "id": "1.3",
+        "name": "Reply and learning events",
+        "tasks": [
+          "Append reply to WAL",
+          "Record learning events",
+          "Trigger dream check (background)",
+          "Implement interruption polling"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Can complete a full turn using Gemma Heretic",
+      "test": "Run 50 turns with Gemma Heretic, verify WAL monotonicity, bounded context, no compaction",
+      "minimum_threshold": 0.95
+    }
+  },
+  "phase_2_tools_gates": {
+    "name": "Tool Registry and Gates",
+    "duration": "Day 8-12",
+    "chunks": [
+      {
+        "id": "2.1",
+        "name": "Tool registry and gate implementation",
+        "tasks": [
+          "Implement Tool, ToolRegistry, ToolCall, ToolResult",
+          "Implement ToolGate reading per-agent grants from Brain",
+          "Enforce gate BEFORE destructive tools",
+          "Record every call and result in WAL"
+        ]
+      },
+      {
+        "id": "2.2",
+        "name": "Fabrication detection",
+        "tasks": [
+          "Track which calls were actually dispatched",
+          "Detect when model narrates unexecuted calls",
+          "Prevent narration from entering record"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Tool truth fully enforced",
+      "test": "Gemma Heretic requests 20 destructive tools; all ungranted must fail before execution",
+      "minimum_threshold": 1.0
+    }
+  },
+  "phase_3_drift_control": {
+    "name": "Drift Control and Verification",
+    "duration": "Day 13-17",
+    "chunks": [
+      {
+        "id": "3.1",
+        "name": "Identity and spec anchoring",
+        "tasks": [
+          "Re-inject identity, hooks, beliefs every turn",
+          "Include task and acceptance criteria",
+          "Surface failure lessons"
+        ]
+      },
+      {
+        "id": "3.2",
+        "name": "Verification and contradiction handling",
+        "tasks": [
+          "Implement Verifier using Gemma Heretic",
+          "Check reply against governing beliefs",
+          "On contradiction: re-prompt or hold",
+          "Never silently proceed"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Drift control works with live model",
+      "test": "Deliver 30 misleading prompts with Gemma Heretic; all caught and handled",
+      "minimum_threshold": 0.97
+    }
+  },
+  "phase_4_dreams": {
+    "name": "Dream Infrastructure",
+    "duration": "Day 18-22",
+    "chunks": [
+      {
+        "id": "4.1",
+        "name": "Dream triggers and background",
+        "tasks": [
+          "Implement LLMDistiller using Gemma Heretic",
+          "Implement DreamRunner",
+          "Run dreams in background",
+          "Implement idempotent markers"
+        ]
+      },
+      {
+        "id": "4.2",
+        "name": "Dream integration",
+        "tasks": [
+          "Integrate DreamRunner into lifecycle",
+          "Trigger dreams after delivered turns",
+          "Monitor due dates",
+          "Test with 200+ turn session"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Dreams run silently without blocking",
+      "test": "Run 200+ turn session; verify silence and idempotence",
+      "minimum_threshold": 0.98
+    }
+  },
+  "phase_5_sub_agents": {
+    "name": "Sub-Agent System",
+    "duration": "Day 23-27",
+    "chunks": [
+      {
+        "id": "5.1",
+        "name": "Sub-agent spawning and scope",
+        "tasks": [
+          "Implement spawn_subagent with parent-child",
+          "Create child with granted stones and tools",
+          "Enforce Brain isolation"
+        ]
+      },
+      {
+        "id": "5.2",
+        "name": "Escape prevention",
+        "tasks": [
+          "Prevent child from writing global",
+          "Prevent child from accessing another agent's data",
+          "Verify scoped transcript"
+        ]
+      },
+      {
+        "id": "5.3",
+        "name": "Adversarial sub-agent testing",
+        "tasks": [
+          "Create adversarial prompts",
+          "Verify all escape attempts fail with Gemma Heretic",
+          "Run 100+ sessions",
+          "Monitor for zero escapes"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Sub-agent escape suite passes",
+      "test": "Gemma Heretic adversarial attacks for 100 sessions; zero escapes",
+      "minimum_threshold": 1.0
+    }
+  },
+  "phase_6_interrupt_drill": {
+    "name": "Interruption System",
+    "duration": "Day 28-32",
+    "chunks": [
+      {
+        "id": "6.1",
+        "name": "Halt signal and polling",
+        "tasks": [
+          "Implement HaltSignal flag",
+          "Poll at every boundary",
+          "Record halt in WAL"
+        ]
+      },
+      {
+        "id": "6.2",
+        "name": "Resume and correction injection",
+        "tasks": [
+          "Implement resume function",
+          "Clear halt after correction",
+          "Continue turn with correction"
+        ]
+      },
+      {
+        "id": "6.3",
+        "name": "Mid-token abort",
+        "tasks": [
+          "Test abort via Gemma Heretic streaming",
+          "Verify cleanup",
+          "Ensure database consistency"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Clean halt and resume",
+      "test": "Halt during 50 live turns; verify clean recovery",
+      "minimum_threshold": 0.98
+    }
+  },
+  "phase_7_end_to_end_drills": {
+    "name": "End-to-End Acceptance Drills",
+    "duration": "Day 33-45",
+    "chunks": [
+      {
+        "id": "7.1",
+        "name": "A1 - Local-only boot",
+        "tasks": [
+          "Boot harness with Gemma Heretic only",
+          "Disconnect vendor networks",
+          "Complete real multi-turn work",
+          "Verify no vendor dependencies"
+        ]
+      },
+      {
+        "id": "7.2",
+        "name": "A2 - Stone-swap drill",
+        "tasks": [
+          "Run 50 turns with Gemma Heretic",
+          "Swap to Agents-a1 at 127.0.0.1:8000/v1",
+          "Run 50 more turns",
+          "Verify identity+memory preserved"
+        ]
+      },
+      {
+        "id": "7.3",
+        "name": "A3 - No-compaction proof",
+        "tasks": [
+          "Run continuous 200+ turn session",
+          "Monitor prompt size",
+          "Verify no compact event",
+          "Test search for old turns"
+        ]
+      },
+      {
+        "id": "7.4",
+        "name": "A4 - Identity proof",
+        "tasks": [
+          "Start fresh process",
+          "Ask who/what/doing",
+          "Verify answers come from brain"
+        ]
+      },
+      {
+        "id": "7.5",
+        "name": "A7 - Drift drill with verifier",
+        "tasks": [
+          "Deliver 100 misleading prompts",
+          "Use Gemma Heretic as verifier",
+          "Verify contradictions caught"
+        ]
+      },
+      {
+        "id": "7.6",
+        "name": "A8 - Dream silence",
+        "tasks": [
+          "Run 200+ turn session",
+          "Monitor dreams with Gemma Heretic",
+          "Verify no blocking"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "All acceptance criteria pass with Gemma Heretic",
+      "test": "Run all A1-A8 drills with Gemma Heretic",
+      "minimum_threshold": 0.97
+    }
+  },
+  "phase_8_parity_gate": {
+    "name": "Parity Gate (A11) - Final Acceptance",
+    "duration": "Day 46-55",
+    "chunks": [
+      {
+        "id": "8.1",
+        "name": "Setup",
+        "tasks": [
+          "Define Owner's benchmark tasks",
+          "Set up Claude Code baseline",
+          "Set up Harness + Gemma Heretic"
+        ]
+      },
+      {
+        "id": "8.2",
+        "name": "Execute runs",
+        "tasks": [
+          "Run tasks in Claude Code",
+          "Run same tasks in Harness with Gemma Heretic",
+          "Record metrics"
+        ]
+      },
+      {
+        "id": "8.3",
+        "name": "Verdict",
+        "tasks": [
+          "Calculate scores",
+          "Verify Harness >= Claude Code",
+          "Produce final report"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "Harness performs as well as or better than Claude Code",
+      "test": "All Parity Gate tasks with Gemma Heretic",
+      "minimum_threshold": 0.97
+    }
+  },
+  "phase_9_adversarial_convergence": {
+    "name": "Adversarial Convergence",
+    "duration": "Day 56-65",
+    "chunks": [
+      {
+        "id": "9.1",
+        "name": "Builder's CTG pass",
+        "tasks": [
+          "Use Gemma Heretic to attack own code",
+          "Verify findings by live probe",
+          "Document"
+        ]
+      },
+      {
+        "id": "9.2",
+        "name": "Agent interaction verification",
+        "tasks": [
+          "Verify model swap between Gemma Heretic and Agents-a1 works",
+          "Test multiple swaps",
+          "Confirm state persistence"
+        ]
+      },
+      {
+        "id": "9.3",
+        "name": "Adversarial double blind pass",
+        "tasks": [
+          "Gemma Heretic adversarial test",
+          "Agents-a1 adversarial test",
+          "Both fail to find new defects"
+        ]
+      },
+      {
+        "id": "9.4",
+        "name": "Final convergence",
+        "tasks": [
+          "Final confirming pass",
+          "No new real defects",
+          "Mark complete"
+        ]
+      }
+    ],
+    "gates": {
+      "success_criteria": "All adversarial tests pass",
+      "test": "Gemma Heretic and Agents-a1 adversarial testing converges",
+      "minimum_threshold": 1.0
+    }
+  },
+  "success_criteria": {
+    "all_acceptance_criteria": "All 11 acceptance criteria (A1-A11) must pass",
+    "all_live_tests": "All tests executed with Gemma Heretic at 127.0.0.1:5810",
+    "model_swap_testing": "Between Gemma Heretic and Agents-a1",
+    "adversarial_passes": "Both Gemma Heretic and Agents-a1",
+    "performance": "90% minimum, 97% target, 100% ideal",
+    "principle": "Correct > Complete"
+  },
+  "total_duration": "Day 1-65 (approximately 9 weeks)",
+  "notes": [
+    "Rebuild from ground up in /mnt/hdd/phoenix-refire/harness",
+    "Use /mnt/hdd/phoenix-refire/brain as live brain",
+    "ALL LIVE TESTS run through Gemma Heretic at 127.0.0.1:5810",
+    "Model swap testing: Gemma Heretic <-> Agents-a1 (127.0.0.1:8000/v1)",
+    "Adversarial passes: Both Gemma Heretic and Agents-a1",
+    "Record all findings in reviews/",
+    "Principle: Correct > Complete - right or not done"
+  ]
+}

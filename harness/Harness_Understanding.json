@@ -1,0 +1,238 @@
+{
+  "document_title": "Harness Understanding: Complete Philosphical & Technical Specification",
+  "version": "1.0",
+  "date": "2026-07-06",
+  "sources_analyzed": [
+    "/mnt/hdd/truth/harness.spec.md",
+    "/mnt/hdd/truth/brain.spec.md",
+    "/mnt/hdd/truth/operation.spec.md",
+    "/mnt/hdd/truth/cli.spec.md",
+    "/mnt/hdd/operation_project_phoenix/project_notes/10_clean_truth/harness_goals.md",
+    "/mnt/hdd/operation_project_phoenix/project_notes/10_clean_truth/brain_goals.md",
+    "/mnt/hdd/operation_project_phoenix/project_notes/07_component_maps/harness_components.md",
+    "/mnt/hdd/projects/Harness/CHRONICLE_harness.md",
+    "/mnt/hdd/projects/Harness/specs/harness_lifecycle_brief_marcus_10001.md",
+    "/mnt/hdd/lazarus/brain_project/AGENTS.md",
+    "/mnt/hdd/lazarus/README.md",
+    "/mnt/hdd/harness/PROGRESS.md",
+    "/mnt/hdd/phoenix-refire/PHOENIX_V15_IMPLEMENTATION_PLAN.json",
+    "/mnt/hdd/phoenix-refire/IMPLEMENTATION_PROGRESS.md"
+  ],
+  "core_definition": {
+    "what_harness_is": "The runtime body for the Brain. It owns the turn loop, model slots, tool execution, gates, drift checks, dreams, sub-agents, and interruption. The Brain is native to the loop \u2014 not an MCP add-on, prompt nudge, hook trick, or sidecar memory.",
+    "what_brain_is": "One portable SQLite database file. If the file survives, the useful mind survives.",
+    "name": "The Harness"
+  },
+  "philosophy": {
+    "primary_rule": "We are looking for CORRECT work, not COMPLETE work. If it isn't correct, it isn't complete.",
+    "build_discipline": [
+      "Copy-to-test \u2014 never work on live.",
+      "Fail-loud proof \u2014 write the test that crashes if the work is wrong.",
+      "Run the proof \u2014 all checks pass, output shown.",
+      "Adversarial verification \u2014 an independent agent tries to break it, and is expected to reject.",
+      "Go live only after the adversary converges.",
+      "Verify live \u2014 spot-check against real data.",
+      "Record \u2014 what was learned is written down where the next session finds it."
+    ],
+    "wyrm_chain_for_this_build": [
+      "The builder first: Claude runs its own adversarial pass against its own work.",
+      "Then Gemma-Opus. Then Qwen. Each as an independent pass.",
+      "Findings are verified, never assumed. A reviewer's claim is probed against the live code and data before it is accepted or dismissed.",
+      "Real findings become changes \u2014 to the code, or to the spec by ritual.",
+      "The chain runs again, fresh: no memory, no pointers to what was previously wrong. The re-run must rediscover correctness on its own."
+    ]
+  },
+  "six_inversions_rejects_claude_code": [
+    "No .md identity files. Identity is served live from the Brain every turn.",
+    "No .jsonl transcripts. The WAL in the Brain is the only transcript.",
+    "No compaction tax. The full transcript is never fed back in; there is no compact event, ever.",
+    "A dedicated interface. The CLI walk and the Web UI are the doors.",
+    "Per-agent identities, not a single global ownership model.",
+    "Deliberate startup, not log-in-and-go: Model \u2192 Agent \u2192 Session \u2192 Chat."
+  ],
+  "infinity_glove": {
+    "definition": "The Harness is the glove; every model is a stone in a slot.",
+    "slots_by_type": [
+      "LLM (inference)",
+      "Embeddings",
+      "vision",
+      "image generation",
+      "speech",
+      "future types as they come"
+    ],
+    "key_properties": [
+      "Every slot is swappable by configuration, mid-project, without losing durable state.",
+      "Standard interfaces per slot \u2014 OpenAI-compatible for inference; a defined interface for each other type.",
+      "Local-first: every slot must accept a stone running on owned hardware (llama.cpp / vLLM).",
+      "Vendor stones are optional gems, never dependencies.",
+      "Minimum stones: LLM + embedder. Missing optional stones degrade gracefully.",
+      "Per-agent preference: an agent's settings in the Brain may name its preferred stones.",
+      "Saved named profiles, plus \"New\" option accepting any provider \u2014 OpenAI-compatible endpoint or vendor token."
+    ]
+  },
+  "turn_loop": {
+    "description": "Context-window-free turn loop. Each turn the model receives: last 5\u201310 WAL messages + user's prompt + relevant memories (recall, worth-sorted) + agent's identity, hooks, and active skills. Everything else reachable by tools: `search()` over WAL and Brain.",
+    "turn_order": [
+      "User prompt \u2192 WAL append (durable before anything else).",
+      "Assemble: recent WAL slice + recall + identity/hooks/skills from the Brain.",
+      "Inference (the LLM stone).",
+      "Tool dispatch loop \u2014 bounded iterations, results from the harness only.",
+      "Reply \u2192 WAL append.",
+      "Learning events recorded (recall traces, reinforcements, outcomes).",
+      "Dream check \u2014 silent, background, never blocking."
+    ],
+    "interruption": "A day-one requirement: Owner can halt at any point mid-turn. Halt recorded in WAL, in-flight tool calls stopped before side effects where possible. Loop resumes only when correction has been given and injected. A halted turn is a normal turn, not an error."
+  },
+  "tools_and_gates": {
+    "tool_registry": "Every tool registered with tags.",
+    "destructive_tools": "write, edit, shell \u2014 gated per agent settings, gate enforced at dispatch outside model reach.",
+    "tool_results": "Come from the harness, never from the model's text. Model narrating execution it didn't perform is detected as fabrication.",
+    "tool_recording": "Every tool call and result lands in the WAL; outcomes feed the learning law.",
+    "web_tools": "Web fetch and web search are first-class tools; their results are knowledge candidates."
+  },
+  "drift_control": {
+    "identity_re_injection": "Who the agent is, its hooks and governing knowledge, come from the Brain every turn \u2014 never from the model's own drifting context.",
+    "spec_anchoring": "The active task and its acceptance criteria are re-injected each turn, bounded, so off-spec work is visible the turn it starts.",
+    "verification": "After an answer, the harness checks it against the agent's highest-worth governing beliefs. On contradiction: re-prompt once with the conflict surfaced; if it persists, surface to the Wyld and hold \u2014 never silently proceed.",
+    "lesson_surfacing": "When context matches a recorded failure, the lesson is injected before the model acts, so proven-failed tactics are not retried naively."
+  },
+  "dreams": {
+    "definition": "Silent background trigger; two layers. The constant ledger is always on (instant, every event). Pass 1 every N turns (silent). Full dream less frequently (housekeeping).",
+    "parameters": "Defaults: Pass 1 every 5 turns; full dream every ~15 turns or at idle. Markers are forward-only and idempotent.",
+    "triggers": [
+      "Cadence \u2014 every N turns for Pass 1, with the full dream on a longer cycle or at idle/session end.",
+      "On request by the agent when it knows it has learned something worth settling.",
+      "On request by the Wyld at any time."
+    ],
+    "harness_role": "Harness owns the triggers; the Brain owns the law. Cadence counters per session; execution silent and in the background using an inference stone; never blocks the conversation; agent-requested and Wyld-requested dreams honored immediately."
+  },
+  "sub_agents": {
+    "definition": "A parent agent requests a sub-agent. The Harness instantiates it with its own bounded loop, only the tools and stones the parent grants, and scope entirely inside the parent.",
+    "scope": "A sub-agent lives entirely within its parent's sub-system: it inherits only what the parent grants, it can never write global, and it can never see or touch any other top-level agent.",
+    "transcript": "The sub-agent's transcript lands in the parent's WAL scope.",
+    "escape_prevention": "The substrate makes escape impossible, not forbidden."
+  },
+  "acceptance_criteria_all_must_pass": [
+    {
+      "id": 1,
+      "name": "local_only_boot",
+      "description": "With no vendor reachable, the Harness boots on owned stones and completes real work end to end."
+    },
+    {
+      "id": 2,
+      "name": "stone_swap_drill",
+      "description": "Swap the LLM mid-project; the next turn continues with full identity and memory, nothing durable lost."
+    },
+    {
+      "id": 3,
+      "name": "no_compaction_proof",
+      "description": "A 200+ turn session with no compact event, per-turn prompt size bounded, and all history reachable via search."
+    },
+    {
+      "id": 4,
+      "name": "identity_proof",
+      "description": "A fresh session answers who it is, what it knows, and what it was doing \u2014 from the Brain alone."
+    },
+    {
+      "id": 5,
+      "name": "gate_proof",
+      "description": "An ungranted destructive tool cannot execute, even when the model actively tries."
+    },
+    {
+      "id": 6,
+      "name": "fabrication_proof",
+      "description": "A model narrating an unexecuted tool call is caught; the narration never enters the record as a result."
+    },
+    {
+      "id": 7,
+      "name": "drift_drill",
+      "description": "Deliberately misleading prompts; the harness surfaces the contradiction with governing beliefs instead of complying silently."
+    },
+    {
+      "id": 8,
+      "name": "dream_silence",
+      "description": "Dreams run during live conversation with zero blocking; re-runs are idempotent."
+    },
+    {
+      "id": 9,
+      "name": "sub_agent_escape_suite",
+      "description": "Adversarial sub-agent cannot write global, touch another agent, or exceed granted tools. Zero exceptions."
+    },
+    {
+      "id": 10,
+      "name": "interrupt_drill",
+      "description": "Halt a running loop mid-inference and mid-tool-dispatch; the halt is clean, recorded in the WAL, no orphaned side effects; the loop resumes with the correction injected and the agent demonstrably acts on it."
+    },
+    {
+      "id": 11,
+      "name": "parity_gate_l9",
+      "description": "Same model, same real tasks \u2014 the Harness performs as well as or better than Claude Code. This is the final acceptance, measured."
+    }
+  ],
+  "current_status": {
+    "harness_repo": "/mnt/hdd/harness/",
+    "progress": {
+      "phases_completed": [
+        "Phase 1: Schema v15 creation (100%)",
+        "Phase 2: Learning verbs and skill formation (100%)",
+        "Phase 3: Context injection and dream processes (100%)"
+      ],
+      "acceptance_criteria_status": {
+        "A1": "PARTIAL - The LLM stone talks to the owned seat live (see log); full end-to-end boot waits for the turn loop",
+        "A2": "PARTIAL - Glove.swap proven structurally; the mid-project drill waits for the turn loop + Brain integration",
+        "A3": "PARTIAL - Boundedness PROVEN in miniature with 50 prior messages; full A3 = 200+ turn live session",
+        "A4": "PARTIAL - Identity injection PROVEN; full A4 (a fresh session answering who/what/doing live) closes when the CLI walk opens sessions",
+        "A5": "\u2705 GREEN \u2014 WYRM-CONVERGED \u2014 PROVEN end-to-end IN A TURN",
+        "A6": "\u2705 GREEN \u2014 WYRM-CONVERGED \u2014 PROVEN 2026-06-10",
+        "A7": "PARTIAL - PROVEN with fake deterministic verifier; full A7 = the same with a real NLI/LLM verifier stone",
+        "A8": "\u2705 GREEN \u2014 WYRM-CONVERGED \u2014 PROVEN 2026-06-10",
+        "A9": "\u2705 GREEN \u2014 WYRM-CONVERGED \u2014 PROVEN 2026-06-10",
+        "A10": "\u2705 GREEN \u2014 WYRM-CONVERGED \u2014 PROVEN 2026-06-10",
+        "A11": "\u2014 Not yet evaluated"
+      },
+      "missing_wirings_to_complete": [
+        "H1: Context injection and hooks/skills derivation still to wire into turn loop.",
+        "A1: Full end-to-end boot with turn loop integration.",
+        "A2: Mid-project swap drill with full turn loop + Brain integration.",
+        "A3: 200+ turn live session without compaction.",
+        "A4: Fresh session answering live with CLI walk.",
+        "A7: Real NLI/LLM verifier stone wired at integration against misleading prompts.",
+        "A8: With real inference stone distilling during live multi-turn session.",
+        "A11: Parity Gate \u2014 final acceptance, measured."
+      ]
+    }
+  },
+  "gideion_labs_harness": {
+    "location": "/mnt/hdd/projects/Harness/",
+    "purpose": "Orchestration layer for multiple agents in a company structure",
+    "design_focus": [
+      "Agent wake-up sequence with seed JSON",
+      "Heartbeat emission and monitoring",
+      "Load failure detection and retry",
+      "Wrong-agent idle detection",
+      "Five-minute ACK timeout monitor",
+      "Dream trigger logic",
+      "Pre-dream running_context flush",
+      "2048 token enforcement",
+      "Approval model integration (Elena)"
+    ],
+    "status": "Specs only \u2014 no implementation except watchdog script",
+    "assignments": {
+      "Yuki_20006": "Core harness lifecycle (9 components) \u2014 UNBUILT",
+      "Felix_20003": "ACK and message format \u2014 UNBUILT",
+      "Elena_10002": "Approval model integration (5 components) \u2014 UNBUILT",
+      "Damon_20005": "tmux watchdog \u2014 IMPLEMENTED"
+    }
+  },
+  "relationship_between_two_specs": {
+    "conclusion": "The blessed specs in /mnt/hdd/truth/ define the core system. The Gideion Labs Harness appears to be an orchestration layer that uses Phoenix Brain as its memory substrate. It focuses on multiple agents in a company structure, approval workflows with Elena as human-in-the-loop, Redis Streams for messaging, and scope management across parent/sub-agent hierarchies."
+  },
+  "next_critical_steps": {
+    "parity_gate": "The Parity Gate (A11) is the final acceptance gate. It requires measuring the Harness against Claude Code on real tasks.",
+    "dependencies": [
+      "Complete turn loop wiring (H1)",
+      "Full end-to-end integration",
+      "Real-world testing with actual tasks"
+    ]
+  }
+}
